@@ -162,6 +162,28 @@
     letter-spacing:.04em;
   }
   .section-head p{margin:0;color:var(--muted);font-size:12.5px;font-family:var(--mono);white-space:nowrap;}
+  
+  .tv-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: #04140f;
+    background: var(--blue);
+    color: #ffffff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.15s;
+    margin-top: 6px;
+  }
+  .tv-link-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
   @media(max-width:640px){
     .section-head{flex-direction:column;align-items:flex-start;gap:6px;}
     .section-head p{white-space:normal;}
@@ -301,7 +323,7 @@
   }
   .topic-chip.active{background:var(--bull);color:#04140f;border-color:var(--bull);font-weight:700;}
 
-  /* ---------- Research ---------- */
+  /* ---------- Research / Market Pulse ---------- */
   .research-card{
     background:var(--panel);border:1px solid var(--line);border-radius:10px;
     padding:18px 20px;margin-bottom:12px;
@@ -344,22 +366,6 @@
     {
       "proName": "FOREXCOM:DJI",
       "title": "Dow 30"
-    },
-    {
-      "description": "NVIDIA",
-      "proName": "NASDAQ:NVDA"
-    },
-    {
-      "description": "Apple",
-      "proName": "NASDAQ:AAPL"
-    },
-    {
-      "description": "Crude Oil",
-      "proName": "TVC:USOIL"
-    },
-    {
-      "description": "VIX Index",
-      "proName": "TVC:VIX"
     }
   ],
   "showSymbolLogo": true,
@@ -608,46 +614,69 @@
     <div class="quiz-shell" id="quiz-shell"></div>
   </div>
 
-  <!-- ============ RESEARCH ============ -->
+  <!-- ============ MARKET PULSE ============ -->
   <div class="view" id="view-research">
     <div class="section-head">
-      <h2>Market Pulse <span class="tag" style="background:var(--blue);">LIVE CONTEXT</span></h2>
-      <p>Real-time Market Technicals &amp; Analysis</p>
+      <div>
+        <h2>Market Pulse <span class="tag" style="background:var(--blue);">LIVE INDICES</span></h2>
+        <p>Real-time updates: Nasdaq, S&amp;P 500 &amp; Dow Jones</p>
+      </div>
+      <a href="https://www.tradingview.com/" target="_blank" rel="noopener noreferrer" class="tv-link-btn">
+        Open TradingView Directly ↗
+      </a>
     </div>
 
-    <!-- Live TradingView Advanced Chart -->
-    <div style="height:500px; width:100%; margin-bottom:20px; border:1px solid var(--line); border-radius:10px; overflow:hidden;">
-      <div class="tradingview-widget-container" style="height:100%;width:100%;">
-        <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%;"></div>
-        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+    <!-- Live Major Indices Overview Widget -->
+    <div style="height:500px; width:100%; margin-bottom:20px; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--panel);">
+      <div class="tradingview-widget-container" style="height:100%; width:100%;">
+        <div class="tradingview-widget-container__widget" style="height:100%; width:100%;"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
         {
-          "autosize": true,
-          "symbol": "FOREXCOM:SPXUSD",
-          "interval": "D",
-          "timezone": "Etc/UTC",
-          "theme": "dark",
-          "style": "1",
+          "colorTheme": "dark",
+          "dateRange": "1D",
+          "showChart": true,
           "locale": "en",
-          "allow_symbol_change": true,
-          "calendar": false,
-          "support_host": "https://www.tradingview.com"
+          "width": "100%",
+          "height": "100%",
+          "largeChartUrl": "",
+          "isTransparent": true,
+          "showSymbolLogo": true,
+          "showFloatingTooltip": true,
+          "plotLineColorGrowing": "rgba(31, 191, 136, 1)",
+          "plotLineColorFalling": "rgba(229, 72, 77, 1)",
+          "gridLineColor": "rgba(33, 43, 50, 1)",
+          "scaleFontColor": "rgba(131, 148, 161, 1)",
+          "belowLineFillColorGrowing": "rgba(31, 191, 136, 0.12)",
+          "belowLineFillColorFalling": "rgba(229, 72, 77, 0.12)",
+          "belowLineFillColorGrowingBottom": "rgba(31, 191, 136, 0)",
+          "belowLineFillColorFallingBottom": "rgba(229, 72, 77, 0)",
+          "symbolActiveColor": "rgba(31, 191, 136, 0.15)",
+          "tabs": [
+            {
+              "title": "US Major Indices",
+              "symbols": [
+                {
+                  "s": "FOREXCOM:SPXUSD",
+                  "d": "S&P 500"
+                },
+                {
+                  "s": "FOREXCOM:NSXUSD",
+                  "d": "Nasdaq 100"
+                },
+                {
+                  "s": "FOREXCOM:DJI",
+                  "d": "Dow Jones 30"
+                }
+              ]
+            }
+          ]
         }
         </script>
       </div>
     </div>
 
-    <div class="research-card">
-      <div class="rh"><h3>What recent research says about candlestick reliability</h3><span class="src">Academic literature</span></div>
-      <p>Studies evaluating candlestick reliability across market regimes consistently show that classic patterns (Hammer, Bullish/Bearish Engulfing, Shooting Star, Doji) offer usable edge in stable markets, but lose much of their predictive power during volatile, news-driven events. Context and structural confirmation remain paramount.</p>
-    </div>
-
-    <div class="research-card">
-      <div class="rh"><h3>Practical implication for this study guide</h3><span class="src">Synthesis</span></div>
-      <p>The workshop's core emphasis — pullback entries over breakout-chasing, confirmation before entry, and reading structure across timeframes — directly aligns with empirical research: isolated candlestick patterns are prone to failure, but patterns backed by key structural levels and trend alignment significantly increase win rates.</p>
-    </div>
-
     <div class="disclaimer">
-      ⚠ Educational content only, not financial advice. Charts stream directly via TradingView data feeds. Always confirm risk management parameters before taking active positions.
+      ⚠ Live streaming feed provided by TradingView. Always verify execution prices and manage risk accordingly before taking active market positions.
     </div>
   </div>
 
