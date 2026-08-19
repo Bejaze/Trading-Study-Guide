@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Price Action &amp; Market Structure — Study Terminal</title>
+<style>
+  :root{
+    --bg:#0a0d10;
+    --panel:#10151a;
+    --panel-raised:#141b21;
+    --line:#212b32;
+    --text:#e7ecef;
+    --muted:#8394a1;
+    --bull:#1fbf88;
+    --bull-dim:#0f5c42;
+    --bear:#e5484d;
+    --bear-dim:#6e2226;
+    --amber:#e2b93b;
+    --blue:#4f9ddb;
+    --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(31,191,136,0.07), transparent 60%),
+      radial-gradient(1000px 500px at 100% 0%, rgba(229,72,77,0.05), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  /* ---------- Ticker ---------- */
+  .ticker-wrap{
+    background:#05070a;
+    border-bottom:1px solid var(--line);
+    overflow:hidden;
+    white-space:nowrap;
+    padding:6px 0;
+  }
+  .ticker{
+    display:inline-block;
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.02em;
+    animation:scroll 38s linear infinite;
+    padding-left:100%;
+  }
+  .ticker span{margin-right:38px;color:var(--muted);}
+  .ticker b{color:var(--text);}
+  .up{color:var(--bull);}
+  .down{color:var(--bear);}
+  @keyframes scroll{
+    0%{transform:translateX(0);}
+    100%{transform:translateX(-100%);}
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    max-width:1180px;
+    margin:0 auto;
+    padding:36px 24px 18px;
+  }
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--bull);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:7px;height:7px;border-radius:50%;
+    background:var(--bull);
+    box-shadow:0 0 10px var(--bull);
+  }
+  h1{
+    font-size:clamp(28px,4.4vw,44px);
+    line-height:1.05;
+    margin:14px 0 10px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  h1 em{
+    font-style:normal;
+    background:linear-gradient(90deg,var(--bull),#7be0c2);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .sub{
+    color:var(--muted);
+    max-width:640px;
+    font-size:15px;
+    line-height:1.55;
+  }
+  .credit{
+    margin-top:14px;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--muted);
+  }
+  .credit b{color:var(--text);}
+
+  /* ---------- Nav ---------- */
+  nav{
+    max-width:1180px;
+    margin:22px auto 0;
+    padding:0 24px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    position:sticky;
+    top:0;
+    z-index:50;
+    background:linear-gradient(var(--bg) 78%, transparent);
+    padding-top:10px;
+    padding-bottom:14px;
+  }
+  .tab{
+    font-family:var(--mono);
+    font-size:12.5px;
+    letter-spacing:.03em;
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:var(--muted);
+    padding:10px 16px;
+    border-radius:7px;
+    cursor:pointer;
+    transition:.15s;
+    display:flex;align-items:center;gap:7px;
+  }
+  .tab:hover{color:var(--text);border-color:#33404a;}
+  .tab.active{
+    color:#04140f;
+    background:var(--bull);
+    border-color:var(--bull);
+    font-weight:600;
+  }
+  .tab .n{
+    font-size:10px;
+    opacity:.7;
+  }
+
+  main{max-width:1180px;margin:0 auto;padding:10px 24px 90px;}
+  .view{display:none;animation:fade .35s ease;}
+  .view.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ---------- Section shell ---------- */
+  .section-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    margin:38px 0 16px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:12px;
+  }
+  .section-head:first-child{margin-top:8px;}
+  .section-head h2{
+    font-size:20px;margin:0;
+    display:flex;align-items:center;gap:10px;
+  }
+  .section-head .tag{
+    font-family:var(--mono);
+    font-size:10.5px;
+    color:var(--bg);
+    background:var(--amber);
+    padding:2px 8px;
+    border-radius:4px;
+    font-weight:700;
+    letter-spacing:.04em;
+  }
+  .section-head p{margin:0;color:var(--muted);font-size:12.5px;font-family:var(--mono);white-space:nowrap;}
+  @media(max-width:640px){
+    .section-head{flex-direction:column;align-items:flex-start;gap:6px;}
+    .section-head p{white-space:normal;}
+    header{padding:28px 18px 14px;}
+    nav{padding:0 18px 14px;}
+    main{padding:10px 18px 70px;}
+    .quiz-shell{padding:20px 16px;}
+    .card{padding:15px;}
+    .stat-row{gap:16px;}
+  }
+
+  .grid{display:grid;gap:14px;}
+  .grid-3{grid-template-columns:repeat(3,1fr);}
+  .grid-2{grid-template-columns:repeat(2,1fr);}
+  @media(max-width:860px){.grid-3,.grid-2{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px 18px 16px;
+  }
+  .card h3{
+    margin:0 0 8px;
+    font-size:14.5px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .card p{margin:0 0 8px;color:#b9c2ca;font-size:13.5px;line-height:1.55;}
+  .card p:last-child{margin-bottom:0;}
+  .pill{
+    font-family:var(--mono);
+    font-size:10px;
+    padding:2px 7px;
+    border-radius:20px;
+    border:1px solid currentColor;
+  }
+  .pill.bull{color:var(--bull);}
+  .pill.bear{color:var(--bear);}
+  .pill.neutral{color:var(--amber);}
+
+  /* ---------- Candle drawings ---------- */
+  .candle-row{display:flex;align-items:flex-end;gap:10px;height:100px;margin:10px 0 4px;}
+  .candle{position:relative;width:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .wick{width:2px;background:currentColor;}
+  .body{width:16px;border-radius:2px;background:currentColor;}
+  .c-bull{color:var(--bull);}
+  .c-bear{color:var(--bear);}
+  .c-doji{color:var(--amber);}
+  .clabel{font-family:var(--mono);font-size:9.5px;color:var(--muted);text-align:center;margin-top:6px;}
+
+  /* ---------- Accordion (Study Guide) ---------- */
+  .acc{border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:10px;background:var(--panel);}
+  .acc-head{
+    padding:15px 18px;
+    display:flex;justify-content:space-between;align-items:center;
+    cursor:pointer;user-select:none;
+  }
+  .acc-head:hover{background:var(--panel-raised);}
+  .acc-head h4{margin:0;font-size:14.5px;display:flex;align-items:center;gap:10px;}
+  .acc-num{font-family:var(--mono);color:var(--muted);font-size:12px;}
+  .acc-arrow{color:var(--muted);transition:.2s;font-size:12px;}
+  .acc.open .acc-arrow{transform:rotate(90deg);color:var(--bull);}
+  .acc-body{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+  .acc.open .acc-body{max-height:2400px;}
+  .acc-inner{padding:0 18px 20px;color:#b9c2ca;font-size:13.5px;line-height:1.65;}
+  .acc-inner strong{color:var(--text);}
+  .acc-inner ul{padding-left:18px;margin:8px 0;}
+  .acc-inner li{margin-bottom:5px;}
+  .rule{
+    margin-top:10px;
+    font-family:var(--mono);
+    font-size:12px;
+    background:#0d1216;
+    border-left:3px solid var(--bull);
+    padding:9px 12px;
+    border-radius:0 6px 6px 0;
+    color:#cdd7dd;
+  }
+  .rule.warn{border-color:var(--bear);}
+  .rule.note{border-color:var(--blue);}
+
+  /* ---------- Quiz ---------- */
+  .quiz-shell{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:26px;
+    max-width:720px;
+    margin:0 auto;
+  }
+  .quiz-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;font-family:var(--mono);font-size:12px;color:var(--muted);}
+  .progress-bar{flex:1;height:5px;background:#1a2229;border-radius:4px;margin:0 16px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--bull);width:0%;transition:.3s;}
+  .qtext{font-size:17px;font-weight:600;margin:6px 0 20px;line-height:1.4;}
+  .opt{
+    display:block;width:100%;text-align:left;
+    background:var(--panel-raised);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:13px 16px;
+    border-radius:8px;
+    margin-bottom:10px;
+    cursor:pointer;
+    font-size:13.5px;
+    font-family:var(--sans);
+    transition:.15s;
+  }
+  .opt:hover{border-color:var(--blue);}
+  .opt.correct{border-color:var(--bull);background:rgba(31,191,136,.12);}
+  .opt.wrong{border-color:var(--bear);background:rgba(229,72,77,.12);}
+  .opt:disabled{cursor:default;}
+  .explain{
+    font-size:13px;color:#b9c2ca;
+    background:#0d1216;border-radius:8px;padding:12px 14px;margin-top:6px;
+    border-left:3px solid var(--blue);
+    display:none;
+    line-height:1.55;
+  }
+  .explain.show{display:block;}
+  .quiz-nav{display:flex;justify-content:space-between;margin-top:20px;}
+  .btn{
+    font-family:var(--mono);font-size:12.5px;
+    background:var(--bull);color:#04140f;border:none;
+    padding:11px 20px;border-radius:7px;cursor:pointer;font-weight:700;
+    letter-spacing:.02em;
+  }
+  .btn:disabled{opacity:.35;cursor:not-allowed;}
+  .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);}
+  .score-screen{text-align:center;padding:30px 10px;}
+  .score-num{font-family:var(--mono);font-size:52px;font-weight:700;color:var(--bull);}
+  .score-screen p{color:var(--muted);}
+  .topic-select{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;}
+  .topic-chip{
+    font-family:var(--mono);font-size:11.5px;
+    border:1px solid var(--line);background:var(--panel-raised);color:var(--muted);
+    padding:7px 13px;border-radius:20px;cursor:pointer;
+  }
+  .topic-chip.active{background:var(--bull);color:#04140f;border-color:var(--bull);font-weight:700;}
+
+  /* ---------- Research ---------- */
+  .research-card{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:18px 20px;margin-bottom:12px;
+  }
+  .research-card .rh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+  .research-card h3{margin:0;font-size:14.5px;}
+  .research-card .src{font-family:var(--mono);font-size:10.5px;color:var(--muted);}
+  .research-card p{color:#b9c2ca;font-size:13.5px;line-height:1.6;margin:0;}
+  .stat-row{display:flex;gap:22px;margin:14px 0 4px;flex-wrap:wrap;}
+  .stat{font-family:var(--mono);}
+  .stat b{display:block;font-size:22px;color:var(--text);}
+  .stat span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+  .stat.up b{color:var(--bull);}
+  .stat.down b{color:var(--bear);}
+  .disclaimer{
+    margin-top:26px;font-family:var(--mono);font-size:11.5px;color:var(--muted);
+    border:1px dashed var(--line);border-radius:8px;padding:14px 16px;line-height:1.6;
+  }
+
+  footer{
+    text-align:center;padding:30px 24px 50px;color:var(--muted);
+    font-family:var(--mono);font-size:11px;
+  }
+
+  ::-webkit-scrollbar{width:10px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px;}
+</style>
+</head>
+<body>
+
+<div class="ticker-wrap">
+  <div class="ticker" id="ticker"></div>
+</div>
+
+<header>
+  <div class="eyebrow">Scarves &amp; Scalpels Trading Academy · Study Terminal</div>
+  <h1>Price Action &amp; <em>Market Structure</em></h1>
+  <p class="sub">An interactive study guide built from your Candlestick and Market Structure workshops — with a practice quiz, a live market-research briefing, and a primer on Steve Nison's <em>Beyond Candlesticks</em>.</p>
+  <div class="credit">Source decks: <b>Trading Workshop</b> &amp; <b>Market Structure</b> — Dr. Annick, Scarves &amp; Scalpels Trading Academy</div>
+</header>
+
+<nav id="nav">
+  <button class="tab active" data-view="guide">📕 Study Guide</button>
+  <button class="tab" data-view="quiz">🎯 Practice Quiz <span class="n">28Q</span></button>
+  <button class="tab" data-view="research">📡 Market Pulse</button>
+  <button class="tab" data-view="beyond">📘 Beyond Candlesticks</button>
+</nav>
+
+<main>
+
+  <!-- ============ STUDY GUIDE ============ -->
+  <div class="view active" id="view-guide">
+
+    <div class="section-head">
+      <h2>1 · Candlestick Fundamentals <span class="tag">DECK 1</span></h2>
+      <p>Anatomy → chart types → reading a single candle</p>
+    </div>
+
+    <div class="grid grid-3">
+      <div class="card">
+        <h3><span class="pill bull">BULL</span> Anatomy of a candle</h3>
+        <div class="candle-row">
+          <div class="candle c-bull"><div class="wick" style="height:14px;"></div><div class="body" style="height:44px;"></div><div class="wick" style="height:14px;"></div></div>
+        </div>
+        <p><strong>Real body</strong> = distance between open &amp; close. <strong>Upper/lower shadows (wicks)</strong> = the high and low reached during the period.</p>
+        <p>Green (bullish): close &gt; open — buyers won the period. Red (bearish): close &lt; open — sellers won.</p>
+      </div>
+      <div class="card">
+        <h3>Big vs. small bodies</h3>
+        <div class="candle-row">
+          <div class="candle c-bull"><div class="wick" style="height:6px;"></div><div class="body" style="height:70px;"></div><div class="wick" style="height:6px;"></div></div>
+          <div class="candle c-bull"><div class="wick" style="height:6px;"></div><div class="body" style="height:18px;"></div><div class="wick" style="height:6px;"></div></div>
+        </div>
+        <p>A <strong>large body</strong> = greater distance traveled = stronger momentum. A <strong>small body</strong> = buyers/sellers were only slightly stronger — weak conviction.</p>
+      </div>
+      <div class="card">
+        <h3>Long wicks on one side</h3>
+        <div class="candle-row">
+          <div class="candle c-bull"><div class="wick" style="height:64px;"></div><div class="body" style="height:18px;"></div><div class="wick" style="height:4px;"></div></div>
+        </div>
+        <p>A candle with a <strong>long bottom wick</strong> = price was pushed down then rejected → strong buying pressure. A <strong>long top wick</strong> = strong selling pressure.</p>
+      </div>
+    </div>
+
+    <div class="acc-group" style="margin-top:18px;">
+
+      <div class="acc open">
+        <div class="acc-head"><h4><span class="acc-num">01</span> Candlestick reversal &amp; continuation patterns</h4><span class="acc-arrow">▸</span></div>
+        <div class="acc-body"><div class="acc-inner">
+          <p><strong>Engulfing pattern</strong> — two candles where a smaller first candle is fully engulfed by a larger candle of the opposite color. The bigger the second candle's body relative to the first, the stronger the reversal signal.</p>
+          <p><strong>3-bar continuation pattern</strong> — a sequence of three same-colored candles that must form in order. The bigger the average candle body, the more reliable the continuation.</p>
+          <p><strong>3-bar reversal pattern</strong> — this pattern consists of a sequence of three candles: the 1st candle is large with a mostly full body, the 2nd candle's body is smaller but still same color, and the 3rd candle is large with a full body of the opposite color.</p>
+          <div class="rule">Rule of thumb: if the 3rd (reversal) candle's body is <strong>smaller</strong> than the 1st candle's body → lower success rate. If it's <strong>equal or larger</strong> → higher success rate.</div>
+          <p><strong>Breakout candles</strong> — a pattern made of multiple small consolidation candles followed by one large, decisive candle that closes the range and pushes price significantly outward (up = bullish, down = bearish).</p>
+          <p><strong>Shrinking candles</strong> — at least three consecutive candles getting progressively smaller, followed by a large candle in the opposite direction — this suggests the trend is losing steam and a reversal is confirmed once the large opposite candle appears.</p>
+          <p><strong>Pin bar</strong> — a one-candle pattern with a small body sitting on one side and a long wick on the other, signaling rejection of that price level.</p>
+          <p><strong>Doji</strong> — a very small body (or none at all), showing indecision between buyers and sellers: price swung up and down but closed near where it opened, meaning neither side gained ground.</p>
+        </div></div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-head"><h4><span class="acc-num">02</span> Chart types</h4><span class="acc-arrow">▸</span></div>
+        <div class="acc-body"><div class="acc-inner">
+          <p>Chart families covered: <strong>Line, Candlestick, Columns (bar), Area, High-Low, Heikin Ashi, Renko, Line Break, Kagi</strong>, and others.</p>
+          <ul>
+            <li><strong>Line chart</strong> — the most basic finance chart; plots only the closing price over time.</li>
+            <li><strong>Candlestick chart</strong> — the workhorse of technical analysis; shows open, high, low, and close for every period.</li>
+          </ul>
+          <div class="rule note">Line and candlestick charts are the two most frequently used chart types in practice.</div>
+        </div></div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-head"><h4><span class="acc-num">03</span> Trends</h4><span class="acc-arrow">▸</span></div>
+        <div class="acc-body"><div class="acc-inner">
+          <ul>
+            <li><strong>Uptrend</strong> — higher highs and higher lows.</li>
+            <li><strong>Downtrend</strong> — lower highs and lower lows.</li>
+            <li><strong>Sideways / range-bound</strong> — highs and lows stay within a band.</li>
+          </ul>
+          <div class="rule">Never sell in an uptrend. Never buy in a downtrend. Never trade a sideways market — wait and watch for the direction of the breakout.</div>
+        </div></div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-head"><h4><span class="acc-num">04</span> Support &amp; resistance</h4><span class="acc-arrow">▸</span></div>
+        <div class="acc-body"><div class="acc-inner">
+          <p><strong>Support</strong> — a price level where a decline tends to pause or bounce.</p>
+          <p><strong>Resistance</strong> — a price level where an advance tends to pause or reverse.</p>
+          <p>Support and resistance are usually the first structural levels traders mark before layering in patterns or indicators.</p>
+        </div></div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-head"><h4><span class="acc-num">05</span> Indicators</h4><span class="acc-arrow">▸</span></div>
+        <div class="acc-body"><div class="acc-inner">
+          <p><strong>MACD (Moving Average Convergence/Divergence)</strong> — a trend/momentum indicator built from two moving averages (the MACD line and a signal line).</p>
+          <div class="rule">Thumb rule: MACD line crosses the signal line from <strong>above → SELL</strong>. MACD line crosses the signal line from <strong>below → BUY</strong>.</div>
+          <p><strong>RSI (Relative Strength Index)</strong> — a momentum oscillator (0–100) used to gauge overbought/oversold conditions.</p>
+          <div class="rule">Thumb rule: RSI &gt; 60 → lean buy. RSI &lt; 40 → lean sell. RSI between 40–60 → stand aside, no clear edge.</div>
+        </div></div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-head"><h4><span class="acc-num">06</span> Chart patterns</h4><span class="acc-arrow">▸</span></div>
+        <div class="acc-body"><div class="acc-inner">
+          <p><strong>Cup &amp; Handle</strong> — a continuation pattern: price rounds out a "cup" shape, forms a small "handle" pullback near the rim, then breaks out toward a measured target.</p>
+          <p><strong>Double Top / Double Bottom</strong> — a reversal pattern: price tests a level twice, fails to break through, and reverses through the "neckline" formed between the two peaks/troughs.</p>
+        </div></div>
+      </div>
+
+    </div>
+
+    <!-- ===== MARKET STRUCTURE SECTION ===== -->
+    <div class="section-head" style="margin-top:50px;">
+      <h2>2 · Market Structure <span class="tag">DECK 2</span></h2>
+      <p>Reading swings, trend transitions, breakouts, liquidity &amp; fractals</p>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Why structure matters</h3>
+        <p>Understanding structure lets you: identify trends and trend transitions, spot specific trade opportunities, place correct stop-loss / take-profit levels, remove the mystery of how price moves, and extract order from apparent chaos.</p>
+      </div>
+      <div class="card">
+        <h3>The market's three behaviors</h3>
+        <p>Every market, in every timeframe, is always doing one of three things: <strong>trending up, trending down, or moving sideways.</strong> Price action produces the same behaviors on every timeframe — the timeframe you trade doesn't change the underlying structure.</p>
+      </div>
+    </div>
+
+    <div class="acc-group" style="margin-top:16px;">
+
+      <div class="acc">
+        <div class="acc-head"><h4><span class="acc-num">07</span> Dow Theory: the three trend types</h4><span class="acc-arrow">▸</span></div>
+        <div class="acc-body"><div class="acc-inner">
+          <ul>
+            <li><strong>Uptrend</strong> — a repeating sequence of Higher Highs (HH) and Higher Lows (HL).</li>
+            <li><strong>Downtrend</strong> — a repeating sequence of Lower Highs (LH) and Lower Lows (LL).</li>
+            <li><strong>Sideways</strong> — "flat" highs and "flat" lows that stay within a similar range.</li>
+          </ul>
+        </div></div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-head"><h4><span class="acc-num">08</span> Supply &amp; demand behind each trend</h4><span class="acc-arrow">▸</span></div>
+        <div class="acc-body"><div class="acc-inner">
+          <table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px;">
+            <tr style="color:var(--muted);text-align:left;"><th style="padding:6px 0;">Trend</th><th>Supply vs. Demand</th></tr>
+            <tr style="border-top:1px solid var(--line);"><td style="padding:7px 0;color:var(--bull);">Uptrend</td><td>Supply &lt; Demand</td></tr>
+            <tr style="border-top:1px solid var(--line);"><td style="padding:7px 0;color:var(--bear);">Downtrend</td><td>Supply &gt; Demand</td></tr>
+            <tr style="border-top:1px solid var(--line);"><td style="padding:7px 0;color:var(--amber);">Sideways</td><td>Supply ≈ Demand</td></tr>
+          </table>
+          <div class="rule note">Newton's First Law, applied to markets: "A trend will continue until a major force disrupts it." Trading with the trend is easier than anticipating a reversal — but you still need to be prepared for the reversal when it comes.</div>
+        </div></div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-head"><h4><span class="acc-num">09</span> The four ways price reverses</h4><span class="acc-arrow">▸</span></div>
+        <div class="acc-body"><div class="acc-inner">
+          <ul>
+            <li><strong>Failure swing / pullback</strong> — in an uptrend, price makes a Lower High (LH) instead of a new Higher High — the first crack in trend momentum.</li>
+            <li><strong>Non-failure swing / expanding pivot (trap)</strong> — price makes one more Higher High, but then breaks below the prior Higher Low, printing a Lower Low and flipping the structure.</li>
+            <li><strong>Double top / bottom</strong> — price forms a Higher High, pulls back, then fails to exceed that high (a "flat high") before breaking the prior low.</li>
+            <li><strong>V-pattern / climax top</strong> — a sharp, single-swing reversal straight off a fresh Higher High with no gradual topping process.</li>
+          </ul>
+        </div></div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-head"><h4><span class="acc-num">10</span> Reading candle bodies &amp; shadows within structure</h4><span class="acc-arrow">▸</span></div>
+        <div class="acc-body"><div class="acc-inner">
+          <p>The relationship between highs, lows, candle bodies, and shadows changes how you interpret structure — specifically whether a breakout is <strong>true or false</strong>, and whether the structure is <strong>solid or fake</strong>.</p>
+          <div class="rule">True breakout = price <strong>closes above</strong> the prior high (not just wicks through it). A close back inside the range after poking through is the signature of a false breakout.</div>
+          <p><strong>How to identify momentum loss:</strong> (1) a lower low/lower high forms against the trend, (2) candles shrink in size and travel a shorter distance each bar, (3) wide swings appear after tight price movement, (4) a candle color change appears at the extreme (e.g., a red candle failing to close higher during an uptrend).</p>
+          <p><strong>How to identify momentum gain:</strong> candles grow larger and travel a greater distance per bar in the trend's direction — trade with that gain of momentum, not against it.</p>
+        </div></div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-head"><h4><span class="acc-num">11</span> Bull/bear traps &amp; breakout vs. pullback trading</h4><span class="acc-arrow">▸</span></div>
+        <div class="acc-body"><div class="acc-inner">
+          <p><strong>Bull trap</strong> — price pushes above a visible level, draws in breakout buyers, then reverses hard. <strong>Bear trap</strong> — the mirror image to the downside.</p>
+          <div class="rule warn">Trading pure breakouts is flagged as a bad idea: breakouts are easy prey for market manipulation and are imprecise. Breakout traders tend to buy right as smart money is selling into the move, and vice versa.</div>
+          <p><strong>Breakout trader</strong> — buys at the break, placing stops below the breakout candle → larger stop, smaller target, easy to manipulate out of the trade.</p>
+          <p><strong>Pullback trader</strong> — waits for a retracement back toward the broken level before entering → smaller stop, larger target, harder for the market to manipulate out of the trade. Technical analysis, in this framework, is really about enhancing the <em>location</em> and <em>timing</em> of trades.</p>
+        </div></div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-head"><h4><span class="acc-num">12</span> Liquidity &amp; market depth</h4><span class="acc-arrow">▸</span></div>
+        <div class="acc-body"><div class="acc-inner">
+          <p><strong>Liquidity</strong> — the ease with which a market can be traded without causing significant changes in price.</p>
+          <p><strong>Market depth</strong> — the number of resting orders across price levels. The deeper the market, the greater the liquidity.</p>
+          <p>Clusters of buy-stop orders sit just above swing highs; clusters of sell-stop orders sit just below swing lows — these clusters are pools of higher liquidity. Bull/bear trap patterns take advantage of that liquidity right above highs and right below lows to manipulate less-informed market participants in a subtle way.</p>
+        </div></div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-head"><h4><span class="acc-num">13</span> Fractal market structure</h4><span class="acc-arrow">▸</span></div>
+        <div class="acc-body"><div class="acc-inner">
+          <p>Price is <strong>fractal</strong> — the same swing patterns repeat inside (or outside) themselves depending on the timeframe you view them from. This is why the timeframe you personally trade doesn't matter: the underlying behaviors are identical across timeframes, and you can read what's happening on adjacent timeframes without switching charts.</p>
+          <p><strong>Paradox of fractal flows:</strong> depending on your perspective (timeframe), price can be going up and down <em>simultaneously</em> — a "major flow" on a higher timeframe can contain a "minor flow" moving the opposite direction. Recognizing this is framed as an opportunity, not a contradiction: more powerful reversals tend to happen when the major and minor flows align in the same direction.</p>
+        </div></div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-head"><h4><span class="acc-num">14</span> Mapping scenarios to participants</h4><span class="acc-arrow">▸</span></div>
+        <div class="acc-body"><div class="acc-inner">
+          <table style="width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px;">
+            <tr style="color:var(--muted);text-align:left;"><th style="padding:6px 0;">Scenario</th><th>Dominant</th><th>Subdominant</th></tr>
+            <tr style="border-top:1px solid var(--line);"><td style="padding:7px 0;color:var(--bull);">Uptrend</td><td>Buyers</td><td>Sellers</td></tr>
+            <tr style="border-top:1px solid var(--line);"><td style="padding:7px 0;color:var(--bear);">Downtrend</td><td>Sellers</td><td>Buyers</td></tr>
+            <tr style="border-top:1px solid var(--line);"><td style="padding:7px 0;color:var(--amber);">Sideways</td><td>—</td><td>—</td></tr>
+          </table>
+          <p style="margin-top:10px;">A 3-step confirmation flow for trades: <strong>(1)</strong> identify key structural levels, <strong>(2)</strong> wait for a retracement toward that level, <strong>(3)</strong> look for confirmation before entering — e.g. a level that flips from support to resistance, or price reacting at a confluence of two or more signals (like a trendline crossing a horizontal level).</p>
+        </div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ QUIZ ============ -->
+  <div class="view" id="view-quiz">
+    <div class="section-head">
+      <h2>Practice Quiz</h2>
+      <p id="quiz-meta">20 questions</p>
+    </div>
+    <div class="topic-select" id="topic-select"></div>
+    <div class="quiz-shell" id="quiz-shell"></div>
+  </div>
+
+  <!-- ============ RESEARCH ============ -->
+  <div class="view" id="view-research">
+    <div class="section-head">
+      <h2>Market Pulse <span class="tag" style="background:var(--blue);">LIVE CONTEXT</span></h2>
+      <p>Updated research, August 2026</p>
+    </div>
+
+    <div class="research-card">
+      <div class="rh"><h3>U.S. equity backdrop</h3><span class="src">fxdailyreport.com · alphio.ai — Aug 2026</span></div>
+      <p>Major U.S. indices have traded near record territory through early-to-mid August 2026, with the S&amp;P 500 holding a year-to-date gain of roughly 13.5% and support forming near the 760 area on SPY. Index performance has stayed concentrated in a handful of mega-cap technology names — Nvidia and Apple alone represent close to 15% of S&amp;P 500 weight — which means broad-index technicals are increasingly a proxy for a small group of stocks rather than the market as a whole.</p>
+      <div class="stat-row">
+        <div class="stat up"><b>+13.5%</b><span>S&amp;P 500 YTD (early Aug)</span></div>
+        <div class="stat"><b>~7.5% / 7.0%</b><span>NVDA / AAPL index weight</span></div>
+        <div class="stat"><b>50D / 200D</b><span>Key MAs holding as support</span></div>
+      </div>
+    </div>
+
+    <div class="research-card">
+      <div class="rh"><h3>Volatility drivers to watch</h3><span class="src">fxdailyreport.com — Aug 2026</span></div>
+      <p>Day-to-day swings in the Dow and Nasdaq through August have tracked a cluster of macro headlines: shifting Fed-rate expectations off soft labor data, oil-price volatility tied to Strait of Hormuz negotiations, and earnings-driven single-stock moves (Nvidia strength offset by pockets of tech weakness). This is a textbook example of the "major force disrupts the trend" idea from your Market Structure deck — trend continuation assumptions get tested hardest around scheduled macro catalysts.</p>
+    </div>
+
+    <div class="research-card">
+      <div class="rh"><h3>What recent research says about candlestick reliability</h3><span class="src">Academic literature, 2025–2026</span></div>
+      <p>A 2026 study on candlestick reliability across market regimes found that classic patterns (Hammer, Bullish/Bearish Engulfing, Shooting Star, Doji) show moderate, usable reliability in stable markets but lose much of their predictive edge during high-volatility crisis periods — consistent with the idea that structure and context matter as much as the pattern itself.</p>
+      <p>Separately, a 2025 real-estate-market study comparing pattern accuracy found the Hammer pattern outperformed (roughly 60% directional accuracy) while Bearish Engulfing and Hanging Man patterns were markedly less reliable (low-to-mid 40% range) — and that accuracy shifted with the interest-rate environment. The consistent takeaway across recent papers: candlestick signals work best as one confirming input alongside trend, support/resistance, and momentum indicators — not as a stand-alone system.</p>
+    </div>
+
+    <div class="research-card">
+      <div class="rh"><h3>Practical implication for this study guide</h3><span class="src">Synthesis</span></div>
+      <p>The workshop's own emphasis — pullback entries over breakout-chasing, confirmation before entry, and reading structure across timeframes — lines up with what current research flags as the main weakness of pattern trading in isolation: patterns without structural context (trend, key level, momentum) are the least reliable, and patterns confirmed by structure are the most reliable.</p>
+    </div>
+
+    <div class="disclaimer">
+      ⚠ Educational content only, not financial advice. Markets move quickly — figures above are a snapshot from mid-August 2026 and will already be dated by the time you read this. Always confirm current prices and news from a live data source before making trading decisions.
+    </div>
+  </div>
+
+  <!-- ============ BEYOND CANDLESTICKS ============ -->
+  <div class="view" id="view-beyond">
+    <div class="section-head">
+      <h2>Beyond Candlesticks <span class="tag" style="background:var(--amber);">Steve Nison</span></h2>
+      <p>Concepts from the sequel to Japanese Candlestick Charting Techniques</p>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <h3>Why this book matters</h3>
+      <p>Steve Nison is widely credited as the person who introduced Japanese candlestick charting to Western traders in his first book, <em>Japanese Candlestick Charting Techniques</em>. <strong>Beyond Candlesticks</strong> is his follow-up, extending past single-candle patterns into a set of non-time-series Japanese charting styles that were, at the time, still largely unknown outside Japan — and into how to blend candlesticks with Western tools like moving averages, RSI, and MACD.</p>
+    </div>
+
+    <div class="section-head" style="margin-top:34px;">
+      <h2>Pattern Gallery <span class="tag" style="background:var(--blue);">Part I — The Patterns</span></h2>
+      <p>Original diagrams illustrating the candle patterns Nison catalogs</p>
+    </div>
+    <p style="color:var(--muted);font-size:12.5px;font-family:var(--mono);margin:-6px 0 18px;">Diagrams below are drawn fresh for this guide to illustrate the shapes and rules — not scans or reproductions of the book's figures.</p>
+
+    <h4 style="color:var(--text);font-size:13px;margin:22px 0 10px;font-family:var(--mono);letter-spacing:.03em;text-transform:uppercase;color:var(--muted);">Single candle lines</h4>
+    <div class="grid grid-3">
+      <div class="card">
+        <h3>🔨 Hammer</h3>
+        <div class="candle-row">
+          <div class="candle c-bull"><div class="wick" style="height:2px;"></div><div class="body" style="height:20px;"></div><div class="wick" style="height:60px;"></div></div>
+        </div>
+        <p>Small body near the top of the range, little or no upper wick, and a lower wick at least twice the body's length. Appears after a decline — sellers pushed price down hard, but buyers reclaimed almost all of it by the close.</p>
+      </div>
+      <div class="card">
+        <h3>🙃 Hanging Man</h3>
+        <div class="candle-row">
+          <div class="candle c-bear"><div class="wick" style="height:2px;"></div><div class="body" style="height:20px;"></div><div class="wick" style="height:60px;"></div></div>
+        </div>
+        <p>Identical shape to the Hammer — small body, long lower wick — but it forms after an <em>advance</em>, not a decline. Same silhouette, opposite context, opposite implication: a warning that buyers are losing control.</p>
+        <div class="rule note">Nison's point: the pattern's shape never changes meaning on its own — where it appears in the trend is what tells you which pattern you're looking at.</div>
+      </div>
+      <div class="card">
+        <h3>☄️ Shooting Star</h3>
+        <div class="candle-row">
+          <div class="candle c-bear"><div class="wick" style="height:60px;"></div><div class="body" style="height:20px;"></div><div class="wick" style="height:2px;"></div></div>
+        </div>
+        <p>The upside-down Hammer shape — small body near the bottom, long upper wick, little/no lower wick. Forms after an advance; price rallied intraday then was rejected and closed near its open, a mirror of the Hammer's rejection logic.</p>
+      </div>
+      <div class="card">
+        <h3>➕ Doji</h3>
+        <div class="candle-row">
+          <div class="candle c-doji"><div class="wick" style="height:40px;"></div><div class="body" style="height:3px;"></div><div class="wick" style="height:40px;"></div></div>
+        </div>
+        <p>Open and close are virtually identical. Nison treats the Doji as a pure indecision signal — its importance rises sharply after a long, mature trend or a series of tall real bodies, and shrinks in a quiet, range-bound market where indecision is unremarkable.</p>
+      </div>
+      <div class="card">
+        <h3>🌊 High-Wave Candle</h3>
+        <div class="candle-row">
+          <div class="candle c-doji"><div class="wick" style="height:55px;"></div><div class="body" style="height:8px;"></div><div class="wick" style="height:55px;"></div></div>
+        </div>
+        <p>A small body with unusually long upper <em>and</em> lower shadows — a more extreme version of indecision than a plain Doji. Price was pulled hard in both directions and went nowhere, which Nison reads as a sign that the crowd has lost conviction about direction.</p>
+      </div>
+      <div class="card">
+        <h3>📦 Accumulation / distribution</h3>
+        <p style="margin-top:6px;">Not a single shape but a concept: a cluster of small real bodies trading in a tight range after a trend. Nison frames this as the market quietly building a new position (accumulation near a bottom, distribution near a top) before the next directional move.</p>
+      </div>
+    </div>
+
+    <h4 style="font-size:13px;margin:26px 0 10px;font-family:var(--mono);letter-spacing:.03em;text-transform:uppercase;color:var(--muted);">Dual candle lines</h4>
+    <div class="grid grid-3">
+      <div class="card">
+        <h3>☁️ Dark Cloud Cover</h3>
+        <div class="candle-row">
+          <div class="candle c-bull"><div class="wick" style="height:4px;"></div><div class="body" style="height:64px;"></div><div class="wick" style="height:4px;"></div></div>
+          <div class="candle c-bear"><div class="wick" style="height:6px;"></div><div class="body" style="height:42px;"></div><div class="wick" style="height:30px;"></div></div>
+        </div>
+        <p>A tall bullish candle, then a bearish candle that opens above the prior high and closes more than halfway down into the first candle's body. The deeper that close cuts into day one, the stronger the bearish reversal reading.</p>
+      </div>
+      <div class="card">
+        <h3>☀️ Piercing Pattern</h3>
+        <div class="candle-row">
+          <div class="candle c-bear"><div class="wick" style="height:4px;"></div><div class="body" style="height:64px;"></div><div class="wick" style="height:4px;"></div></div>
+          <div class="candle c-bull"><div class="wick" style="height:6px;"></div><div class="body" style="height:50px;"></div><div class="wick" style="height:1px;"></div></div>
+        </div>
+        <p>The bullish mirror of Dark Cloud Cover: a tall bearish candle, then a bullish candle that opens below the prior low and rallies to close more than halfway up into the first candle's body.</p>
+        <div class="rule">Nison's distinction from an Engulfing pattern: here the second candle closes <em>inside</em> the first candle's body, not beyond it.</div>
+      </div>
+      <div class="card">
+        <h3>🟩 Bullish Engulfing</h3>
+        <div class="candle-row">
+          <div class="candle c-bear"><div class="wick" style="height:4px;"></div><div class="body" style="height:20px;"></div><div class="wick" style="height:20px;"></div></div>
+          <div class="candle c-bull"><div class="wick" style="height:4px;"></div><div class="body" style="height:50px;"></div><div class="wick" style="height:6px;"></div></div>
+        </div>
+        <p>A small bearish body is completely swallowed by a larger bullish body that opens lower and closes higher than the first candle's entire range. Nison notes it carries more weight after a well-established downtrend than in a choppy market.</p>
+      </div>
+      <div class="card">
+        <h3>🟥 Bearish Engulfing</h3>
+        <div class="candle-row">
+          <div class="candle c-bull"><div class="wick" style="height:4px;"></div><div class="body" style="height:20px;"></div><div class="wick" style="height:20px;"></div></div>
+          <div class="candle c-bear"><div class="wick" style="height:4px;"></div><div class="body" style="height:50px;"></div><div class="wick" style="height:6px;"></div></div>
+        </div>
+        <p>The inverse: a small bullish body is engulfed by a larger bearish body. Nison also describes a "Last Engulfing" variant — the same shape appearing at the tail end of a move, used as an exit signal rather than a fresh entry.</p>
+      </div>
+      <div class="card">
+        <h3>🔲 Harami</h3>
+        <div class="candle-row">
+          <div class="candle c-bear"><div class="wick" style="height:4px;"></div><div class="body" style="height:64px;"></div><div class="wick" style="height:4px;"></div></div>
+          <div class="candle c-bull"><div class="wick" style="height:0px;"></div><div class="body" style="height:14px;"></div><div class="wick" style="height:30px;"></div></div>
+        </div>
+        <p>The inverse silhouette of an Engulfing pattern — a small body sits entirely <em>inside</em> the prior candle's range. Reads as the trend suddenly running out of energy, though Nison treats it as a milder signal than Engulfing or the Star patterns.</p>
+      </div>
+      <div class="card">
+        <h3>✝️ Harami Cross</h3>
+        <div class="candle-row">
+          <div class="candle c-bull"><div class="wick" style="height:4px;"></div><div class="body" style="height:64px;"></div><div class="wick" style="height:4px;"></div></div>
+          <div class="candle c-doji"><div class="wick" style="height:3px;"></div><div class="body" style="height:3px;"></div><div class="wick" style="height:34px;"></div></div>
+        </div>
+        <p>A Harami where the second candle is a Doji rather than just a small body. Nison ranks this as a notably stronger reversal warning than a standard Harami, since it combines "contained inside the prior range" with outright indecision.</p>
+      </div>
+    </div>
+
+    <h4 style="font-size:13px;margin:26px 0 10px;font-family:var(--mono);letter-spacing:.03em;text-transform:uppercase;color:var(--muted);">Three-candle lines</h4>
+    <div class="grid grid-3">
+      <div class="card">
+        <h3>🌅 Morning Star</h3>
+        <div class="candle-row">
+          <div class="candle c-bear"><div class="wick" style="height:4px;"></div><div class="body" style="height:60px;"></div><div class="wick" style="height:4px;"></div></div>
+          <div class="candle c-doji"><div class="wick" style="height:4px;"></div><div class="body" style="height:9px;"></div><div class="wick" style="height:0px;"></div></div>
+          <div class="candle c-bull"><div class="wick" style="height:4px;"></div><div class="body" style="height:54px;"></div><div class="wick" style="height:6px;"></div></div>
+        </div>
+        <p>Three candles: a tall bearish body, a small-bodied "star" that gaps to a new low, then a tall bullish body that closes well back up into the first candle. A three-candle bottom reversal — the star is the moment control changes hands.</p>
+      </div>
+      <div class="card">
+        <h3>🌆 Evening Star</h3>
+        <div class="candle-row">
+          <div class="candle c-bull"><div class="wick" style="height:4px;"></div><div class="body" style="height:60px;"></div><div class="wick" style="height:4px;"></div></div>
+          <div class="candle c-doji"><div class="wick" style="height:4px;"></div><div class="body" style="height:9px;"></div><div class="wick" style="height:68px;"></div></div>
+          <div class="candle c-bear"><div class="wick" style="height:4px;"></div><div class="body" style="height:54px;"></div><div class="wick" style="height:8px;"></div></div>
+        </div>
+        <p>The top-reversal mirror of the Morning Star: a tall bullish body, a small star that gaps to a new high, then a tall bearish body closing back down into the first candle.</p>
+        <div class="rule note">Nison flags the <strong>Doji Star</strong> variant (morning or evening) — when the middle candle is a true Doji instead of just a small body — as a higher-conviction version of either pattern.</div>
+      </div>
+      <div class="card">
+        <h3>🪟 Windows &amp; gapping patterns</h3>
+        <p style="margin-top:6px;">Nison's "window" is simply a Western price gap. A few variants he covers: the <strong>Rising/Falling Window</strong> (a gap in the trend's direction, treated as a support/resistance zone on future pullbacks), <strong>Three Windows</strong> (three consecutive gaps — often a sign a trend is overextended), <strong>Two Black Gapping Candles</strong> (two bearish candles gapping lower after a top), and the <strong>Gapping Doji</strong> (a Doji that gaps away from the prior close, flagging a likely reversal once the gap is filled).</p>
+      </div>
+    </div>
+
+    <div class="grid grid-2" style="margin-top:26px;">
+      <div class="card">
+        <h3>🧱 Kagi charts</h3>
+        <p>A reversal-based charting style that ignores time entirely. A Kagi line only changes direction once price reverses by a meaningful, pre-set amount — thin and thick lines are used to distinguish strength, making it easier to see when a trend has genuinely lost control versus just paused.</p>
+      </div>
+      <div class="card">
+        <h3>🧱 Renko charts</h3>
+        <p>Built from uniform "bricks" that are only added once price moves a fixed amount in one direction, regardless of how much time passes. Renko strips out the minor noise that clutters normal candlestick charts, which makes larger trend shifts easier to spot visually.</p>
+      </div>
+      <div class="card">
+        <h3>🧱 Three-Line Break charts</h3>
+        <p>A new "line" only prints once price breaks above/below the highs or lows of the prior several lines. Because it takes a real, multi-bar move to flip direction, it's designed to filter out short-lived reversals and keep traders aligned with the dominant trend.</p>
+      </div>
+      <div class="card">
+        <h3>📐 Disparity Index</h3>
+        <p>A momentum tool that measures how far the current price has stretched away from a chosen moving average, expressed as a percentage. Nison presents it as a faster, more precise cousin of the moving-average crossover — useful for spotting overextended moves before they snap back.</p>
+      </div>
+    </div>
+
+    <div class="acc-group" style="margin-top:16px;">
+      <div class="acc">
+        <div class="acc-head"><h4><span class="acc-num">◆</span> Merging candlesticks with Western technicals</h4><span class="acc-arrow">▸</span></div>
+        <div class="acc-body"><div class="acc-inner">
+          <p>A central theme of the book: candlestick signals are strongest when layered with Western tools rather than used alone — for example, treating a candlestick reversal pattern that lands exactly on a moving average, a Fibonacci level, or an RSI/MACD signal as higher-confidence than the same pattern appearing with no supporting context.</p>
+          <p>This directly parallels the "confluence" idea from your Market Structure deck — a signal that lines up with multiple independent tools (structure + pattern + indicator) is treated as more trustworthy than any single signal on its own.</p>
+        </div></div>
+      </div>
+      <div class="acc">
+        <div class="acc-head"><h4><span class="acc-num">◆</span> How this extends your workshop material</h4><span class="acc-arrow">▸</span></div>
+        <div class="acc-body"><div class="acc-inner">
+          <ul>
+            <li>Your candlestick deck focuses on classic reversal/continuation patterns (engulfing, 3-bar patterns, pin bars, doji) — Nison's later book adds alternative <em>chart construction methods</em> (Kagi, Renko, Three-Line Break) that change how price is displayed in the first place, independent of which patterns you're hunting for.</li>
+            <li>Where your Market Structure deck teaches you to filter signals through trend + liquidity + confirmation, Nison's Disparity Index gives you a quantitative way to flag when price has stretched too far from "fair value" and a pullback/reversal is statistically more likely.</li>
+            <li>Both sources agree on the same core discipline: no single candle, pattern, or indicator should be traded in isolation — context (trend, structure, and a second confirming tool) is what turns a pattern into a trade.</li>
+          </ul>
+        </div></div>
+      </div>
+
+      <div class="acc">
+        <div class="acc-head"><h4><span class="acc-num">◆</span> Candles &amp; the overall technical picture</h4><span class="acc-arrow">▸</span></div>
+        <div class="acc-body"><div class="acc-inner">
+          <p>Beyond the pattern catalog, a full chapter of the book is devoted to actually trading candle signals responsibly. The recurring themes:</p>
+          <ul>
+            <li><strong>Where a candle appears matters more than the candle itself.</strong> A Hammer at all-time highs isn't a bottom signal — the same shape only means something in the context of a prior move. This is Nison's version of "location, location, location."</li>
+            <li><strong>Stops and risk/reward come from the pattern's own geometry.</strong> Nison generally places protective stops just beyond the extreme of the pattern (e.g., below a Hammer's low, above a Shooting Star's high) — the pattern that generates the signal also defines where it's proven wrong.</li>
+            <li><strong>Trend context first, pattern second.</strong> A reversal pattern is only meaningful if there's an established trend for it to reverse. The same candles appearing inside a sideways chop carry far less weight.</li>
+            <li><strong>"Becoming a market chameleon"</strong> — Nison's phrase for staying flexible rather than mechanically forcing every chart into a named pattern. Candles are a visual aid for reading crowd psychology, not a rigid rulebook to apply blindly.</li>
+            <li><strong>When to offset (exit) a trade</strong> gets the same pattern-based treatment as entries — an opposing candle signal is itself a legitimate reason to close a position, not just a reason to open a new one.</li>
+          </ul>
+          <div class="rule note">This mirrors the "confirmation before entry" discipline in your Market Structure deck almost exactly — Nison is essentially describing the same location + confirmation logic, just from the candlestick side of the toolkit.</div>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      📖 This section summarizes publicly available descriptions and concepts associated with <em>Beyond Candlesticks</em> (Steve Nison, Wiley Finance) for study purposes, and the pattern diagrams above are original illustrations drawn for this guide — not scans or reproductions of the book's figures or text. For the full technique walkthroughs, worked examples, and Nison's complete methodology, read the original.
+    </div>
+  </div>
+
+</main>
+
+<footer>Built as a study companion for the Trading Workshop &amp; Market Structure decks · Educational use only, not financial advice</footer>
+
+<script>
+/* ===================== TICKER ===================== */
+const tickerData = [
+  ["S&P 500","7,754.54","-0.04%",false],
+  ["DOW","53,896.59","-0.26%",false],
+  ["NASDAQ","26,628.07","-0.23%",false],
+  ["NVDA","index wt 7.55%","▲",true],
+  ["AAPL","index wt 7.04%","▲",true],
+  ["WTI CRUDE","$80.10","▲",true],
+  ["VIX","elevated","macro-driven",false],
+  ["10Y YIELD","watch Fed path","—",false],
+];
+const tickerEl = document.getElementById('ticker');
+let tickerHTML = "";
+for(let i=0;i<3;i++){
+  tickerData.forEach(([sym,val,chg,up])=>{
+    tickerHTML += `<span><b>${sym}</b> ${val} <span class="${up?'up':'down'}">${chg}</span></span>`;
+  });
+}
+tickerEl.innerHTML = tickerHTML;
+
+/* ===================== NAV ===================== */
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('view-'+tab.dataset.view).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+
+/* ===================== ACCORDION ===================== */
+document.querySelectorAll('.acc-head').forEach(h=>{
+  h.addEventListener('click',()=>{
+    h.parentElement.classList.toggle('open');
+  });
+});
+
+/* ===================== QUIZ DATA ===================== */
+const QUIZ = [
+  {t:"candles", q:"On a candlestick chart, what does the 'real body' represent?", opts:[
+    "The distance between the high and the low",
+    "The distance between the open and the close",
+    "The total trading volume for the period",
+    "The average price over the period"
+  ], a:1, ex:"The real body is the thick part of the candle, bounded by the open and close. The thin lines above/below (shadows/wicks) mark the high and low."},
+
+  {t:"candles", q:"A candle has a long lower wick and a small body near the top. What does this typically signal?", opts:[
+    "Weak, indecisive trading with no clear pressure",
+    "Strong selling pressure",
+    "Strong buying pressure — price was pushed down and rejected",
+    "A guaranteed trend reversal"
+  ], a:2, ex:"A long bottom wick means sellers pushed price down during the period, but buyers stepped in hard enough to force a close near the top — a sign of strong buying pressure."},
+
+  {t:"candles", q:"In the Engulfing pattern, what makes the reversal signal stronger?", opts:[
+    "The first candle's body is larger than the second",
+    "The second candle's body fully engulfs the first, and is significantly larger",
+    "Both candles are the same color",
+    "The pattern occurs on a sideways market"
+  ], a:1, ex:"The bigger the second (engulfing) candle's body relative to the first, the stronger the reversal signal — it shows a decisive shift in control between buyers and sellers."},
+
+  {t:"candles", q:"In a 3-bar reversal pattern, when is the success rate HIGHER?", opts:[
+    "When the third candle's body is smaller than the first candle's body",
+    "When the third candle's body is equal to or larger than the first candle's body",
+    "When all three candles are the same color",
+    "Success rate is unrelated to candle body size"
+  ], a:1, ex:"If the reversal (3rd) candle's body is equal to or bigger than the first candle's body, the pattern has a higher success rate. A smaller 3rd candle body means lower success rate."},
+
+  {t:"candles", q:"What does a Doji candle indicate?", opts:[
+    "Strong bullish momentum",
+    "Strong bearish momentum",
+    "Indecision — buyers and sellers essentially fought to a draw",
+    "A confirmed trend continuation"
+  ], a:2, ex:"A Doji has a very small or nonexistent body: price swung during the session but closed close to where it opened, showing neither side gained real ground."},
+
+  {t:"candles", q:"What is the defining feature of a 'Breakout candle' pattern?", opts:[
+    "A series of shrinking candles",
+    "Multiple small consolidation candles followed by one large, decisive candle that pushes price sharply out of the range",
+    "A single doji after a long trend",
+    "Two candles of equal size and opposite color"
+  ], a:1, ex:"Breakout candle patterns show tight consolidation (small candles) resolved by one large candle that closes decisively beyond the range."},
+
+  {t:"candles", q:"Per the MACD 'thumb rule' taught in the workshop, when should you consider selling?", opts:[
+    "When the MACD line crosses the signal line from below",
+    "When the MACD line crosses the signal line from above",
+    "When RSI is above 60",
+    "When a doji appears"
+  ], a:1, ex:"Thumb rule: MACD line cutting the signal line from above = SELL. From below = BUY."},
+
+  {t:"candles", q:"Using the RSI thumb rule from the workshop, what should you do when RSI reads 50?", opts:[
+    "Buy aggressively",
+    "Sell aggressively",
+    "Don't do anything — 40–60 is a neutral zone",
+    "Double your position size"
+  ], a:2, ex:"RSI > 60 leans buy, RSI < 40 leans sell, and 40–60 is treated as a neutral 'do nothing' zone in this framework."},
+
+  {t:"candles", q:"Which chart type is described as the most basic, plotting only closing prices over time?", opts:[
+    "Candlestick chart",
+    "Renko chart",
+    "Line chart",
+    "Kagi chart"
+  ], a:2, ex:"The line chart is the simplest chart type in finance — it only tracks the closing price, without open/high/low detail."},
+
+  {t:"candles", q:"What is the core idea behind a Cup & Handle chart pattern?", opts:[
+    "A sharp V-shaped reversal with no pause",
+    "A rounded 'cup' base followed by a small pullback 'handle,' then a breakout continuation",
+    "Two equal peaks separated by a trough",
+    "A single large reversal candle"
+  ], a:1, ex:"Cup & Handle is a continuation pattern: price rounds out a bowl shape, pulls back slightly to form the 'handle,' then breaks out in the direction of the prior trend."},
+
+  {t:"structure", q:"According to Dow Theory as taught here, what defines an uptrend?", opts:[
+    "Lower highs and lower lows",
+    "Higher highs and higher lows",
+    "Flat highs and flat lows",
+    "Random highs and lows with no pattern"
+  ], a:1, ex:"An uptrend is a repeating sequence of Higher Highs (HH) and Higher Lows (HL)."},
+
+  {t:"structure", q:"In the supply/demand framing of trends, what characterizes a downtrend?", opts:[
+    "Supply < Demand",
+    "Supply > Demand",
+    "Supply ≈ Demand",
+    "Supply and demand are irrelevant to trend direction"
+  ], a:1, ex:"A downtrend reflects Supply > Demand — more sellers pushing price down than buyers willing to absorb it."},
+
+  {t:"structure", q:"The 'trend continuation' principle borrowed from Newton's First Law states:", opts:[
+    "A trend will reverse after exactly three swings",
+    "A trend will continue until a major force disrupts it",
+    "Trends only exist on daily charts",
+    "A trend always ends at a round number"
+  ], a:1, ex:"Just like an object in motion stays in motion unless acted on by an external force, a market trend persists until something substantial disrupts it."},
+
+  {t:"structure", q:"Which of the 'four ways price reverses' involves price making one more Higher High before breaking the prior Higher Low?", opts:[
+    "Failure swing / pullback",
+    "Non-failure swing / expanding pivot",
+    "Double top",
+    "V-pattern / climax"
+  ], a:1, ex:"A non-failure swing (expanding pivot) prints a fresh Higher High, then breaks below the prior Higher Low — a trap for those who bought the new high."},
+
+  {t:"structure", q:"What distinguishes a TRUE breakout from a FALSE breakout, per the workshop?", opts:[
+    "A true breakout has higher trading volume, always",
+    "A true breakout closes above the prior high; a false breakout wicks through but fails to close beyond it",
+    "A true breakout only happens on Mondays",
+    "There is no meaningful difference"
+  ], a:1, ex:"The key test is the close: price must close above the prior high (or below the prior low) to count as a true breakout, not just poke through it intraday."},
+
+  {t:"structure", q:"Why is trading pure breakouts (buying/selling right as the range breaks) flagged as risky in the Market Structure deck?", opts:[
+    "Breakouts never work in any market",
+    "It's easy prey for market manipulation and comparatively imprecise, versus waiting for a pullback",
+    "Breakouts only occur in cryptocurrency markets",
+    "Regulators prohibit breakout trading"
+  ], a:1, ex:"Breakout traders tend to enter right where informed participants may be exiting, and their stops sit in an obvious, easily-triggered spot — pullback entries are framed as offering a smaller stop and larger target."},
+
+  {t:"structure", q:"What is 'liquidity' as defined in the Market Structure deck?", opts:[
+    "The total number of traders active in a market",
+    "The ease with which a market can be traded without causing significant changes in price",
+    "The speed of a broker's order execution",
+    "The number of candlestick patterns visible on a chart"
+  ], a:1, ex:"Liquidity describes how easily size can move through a market without moving price significantly — deeper markets (more resting orders) have more liquidity."},
+
+  {t:"structure", q:"What does it mean for price to be 'fractal,' per the Market Structure deck?", opts:[
+    "Price only moves in straight lines",
+    "The same swing patterns repeat across different timeframes, depending on your perspective",
+    "Only the daily timeframe matters for trading",
+    "Fractal geometry has no relevance to trading"
+  ], a:1, ex:"Fractal market structure means the same higher-high/higher-low or reversal patterns you see on a weekly chart also appear, in miniature, on a 5-minute chart — the behaviors repeat across scales."},
+
+  {t:"structure", q:"A bull trap is best described as:", opts:[
+    "A guaranteed profitable long entry",
+    "Price breaking above a level, drawing in breakout buyers, then reversing hard back down",
+    "A pattern that only appears in downtrends",
+    "Another name for a double bottom"
+  ], a:1, ex:"Bull traps lure in buyers right as price pushes above a visible level, then reverse — often exploiting the liquidity (buy-stop orders) clustered just above that level."},
+
+  {t:"beyond", q:"In Steve Nison's 'Beyond Candlesticks', what is distinctive about Renko charts?", opts:[
+    "They plot volume instead of price",
+    "New 'bricks' are only added once price moves a fixed amount, ignoring time entirely",
+    "They only work on cryptocurrency markets",
+    "They are identical to standard candlestick charts"
+  ], a:1, ex:"Renko charts filter out time and minor noise — a new brick only appears after a set price move, making larger trend shifts easier to see."},
+
+  {t:"beyond", q:"A Hammer and a Hanging Man have the identical candle shape. What actually separates them?", opts:[
+    "The Hammer is always green and the Hanging Man is always red",
+    "Nothing — they are the same pattern with two names",
+    "Where they appear in the trend: a Hammer follows a decline, a Hanging Man follows an advance",
+    "The Hanging Man only forms on weekly charts"
+  ], a:2, ex:"Nison is explicit that the shape alone never tells you the pattern's meaning — a small body with a long lower wick is bullish after a decline (Hammer) but a warning sign after an advance (Hanging Man)."},
+
+  {t:"beyond", q:"What makes a Dark Cloud Cover pattern bearish?", opts:[
+    "The second candle opens above the prior high, then closes more than halfway down into the first candle's body",
+    "Two consecutive Doji candles appear in a row",
+    "The second candle's body is smaller than the first candle's body",
+    "Price gaps up and never comes back down"
+  ], a:0, ex:"Dark Cloud Cover needs that deep close back into the prior bullish candle's body — the deeper the close, the stronger the bearish signal."},
+
+  {t:"beyond", q:"How does the Piercing Pattern differ from a Bullish Engulfing pattern?", opts:[
+    "The Piercing Pattern's second candle closes inside the first candle's body; Bullish Engulfing closes beyond it",
+    "The Piercing Pattern requires three candles, not two",
+    "They are the exact same pattern",
+    "The Piercing Pattern only appears on Renko charts"
+  ], a:0, ex:"Both are two-candle bullish reversals, but the key distinction Nison draws is how far the second candle's close travels: partway into the first candle's body (Piercing) versus fully beyond it (Engulfing)."},
+
+  {t:"beyond", q:"What distinguishes a Harami Cross from a standard Harami?", opts:[
+    "The Harami Cross has no first candle",
+    "The Harami Cross's second candle is a Doji, making it a stronger reversal signal",
+    "The Harami Cross only occurs at market open",
+    "There is no difference"
+  ], a:1, ex:"A Harami Cross is a Harami where the small inside candle is specifically a Doji — combining 'contained inside the prior range' with pure indecision, which Nison treats as a stronger warning."},
+
+  {t:"beyond", q:"In a Morning Star pattern, what role does the middle 'star' candle play?", opts:[
+    "It confirms the trend will continue unchanged",
+    "It's a small-bodied candle that gaps to a new low, marking the moment control shifts from sellers to buyers",
+    "It must always be the tallest candle in the pattern",
+    "It has no analytical significance"
+  ], a:1, ex:"The star is the pivot point — a small body (ideally a gap down) sandwiched between a tall bearish candle and a tall bullish candle that closes back up into the first candle's body."},
+
+  {t:"beyond", q:"Per Nison's chapter on trading candles, where should a protective stop typically be placed?", opts:[
+    "Always exactly 5% from entry, regardless of the pattern",
+    "Just beyond the extreme of the pattern that generated the signal (e.g., below a Hammer's low)",
+    "Stops are unnecessary if the pattern looks clean",
+    "At the prior day's closing price only"
+  ], a:1, ex:"Nison ties stop placement to the pattern's own geometry — the same price extreme that generates the signal also defines the level at which the signal is proven wrong."},
+
+  {t:"beyond", q:"What does Nison mean by 'becoming a market chameleon'?", opts:[
+    "Trading only camouflage/commodity futures",
+    "Staying flexible and reading context rather than mechanically forcing every chart into a named pattern",
+    "Switching brokers frequently for better fees",
+    "Only trading patterns that appear on Mondays"
+  ], a:1, ex:"It's Nison's shorthand for treating candlesticks as a visual aid for crowd psychology, not a rigid rulebook — adapting your read to what the market is actually doing."},
+
+  {t:"beyond", q:"What is a 'Gapping Doji' as described in Beyond Candlesticks?", opts:[
+    "A Doji that gaps away from the prior close, flagging a likely reversal once the gap fills",
+    "A Doji that can only form on Renko charts",
+    "Two Doji candles with identical bodies",
+    "A pattern exclusive to bond markets"
+  ], a:0, ex:"A Gapping Doji combines a price gap with the indecision of a Doji — Nison treats the eventual filling of that gap as a signal worth watching for."},
+];
+
+let activeTopic = "all";
+let quizQueue = [];
+let currentIdx = 0;
+let score = 0;
+let answered = false;
+
+const topics = [
+  {id:"all", label:"All Topics"},
+  {id:"candles", label:"Candlesticks"},
+  {id:"structure", label:"Market Structure"},
+  {id:"beyond", label:"Beyond Candlesticks"},
+];
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function buildTopicChips(){
+  const wrap = document.getElementById('topic-select');
+  wrap.innerHTML = "";
+  topics.forEach(tp=>{
+    const chip = document.createElement('div');
+    chip.className = 'topic-chip' + (tp.id===activeTopic ? ' active':'');
+    chip.textContent = tp.label + (tp.id==="all" ? ` (${QUIZ.length})` : ` (${QUIZ.filter(q=>q.t===tp.id).length})`);
+    chip.addEventListener('click',()=>{
+      activeTopic = tp.id;
+      startQuiz();
+    });
+    wrap.appendChild(chip);
+  });
+}
+
+function startQuiz(){
+  buildTopicChips();
+  const pool = activeTopic==="all" ? QUIZ : QUIZ.filter(q=>q.t===activeTopic);
+  quizQueue = shuffle(pool);
+  currentIdx = 0;
+  score = 0;
+  document.getElementById('quiz-meta').textContent = quizQueue.length + " questions";
+  renderQuestion();
+}
+
+function renderQuestion(){
+  answered = false;
+  const shell = document.getElementById('quiz-shell');
+  if(currentIdx >= quizQueue.length){
+    renderScore();
+    return;
+  }
+  const item = quizQueue[currentIdx];
+  const pct = Math.round((currentIdx/quizQueue.length)*100);
+
+  let optsHTML = "";
+  item.opts.forEach((opt,i)=>{
+    optsHTML += `<button class="opt" data-i="${i}">${opt}</button>`;
+  });
+
+  shell.innerHTML = `
+    <div class="quiz-top">
+      <span>Q${currentIdx+1} / ${quizQueue.length}</span>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;"></div></div>
+      <span>Score: ${score}</span>
+    </div>
+    <div class="qtext">${item.q}</div>
+    <div id="opts-wrap">${optsHTML}</div>
+    <div class="explain" id="explain-box">${item.ex}</div>
+    <div class="quiz-nav">
+      <button class="btn ghost" id="skip-btn">Skip →</button>
+      <button class="btn" id="next-btn" disabled>Next Question</button>
+    </div>
+  `;
+
+  document.querySelectorAll('#opts-wrap .opt').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      if(answered) return;
+      answered = true;
+      const chosen = parseInt(btn.dataset.i);
+      document.querySelectorAll('#opts-wrap .opt').forEach((b,i)=>{
+        b.disabled = true;
+        if(i===item.a) b.classList.add('correct');
+        else if(i===chosen) b.classList.add('wrong');
+      });
+      if(chosen===item.a) score++;
+      document.getElementById('explain-box').classList.add('show');
+      document.getElementById('next-btn').disabled = false;
+      document.getElementById('quiz-shell').querySelector('.quiz-top span:last-child').textContent = "Score: "+score;
+    });
+  });
+
+  document.getElementById('next-btn').addEventListener('click',()=>{
+    currentIdx++;
+    renderQuestion();
+  });
+  document.getElementById('skip-btn').addEventListener('click',()=>{
+    if(!answered){ currentIdx++; renderQuestion(); }
+  });
+}
+
+function renderScore(){
+  const shell = document.getElementById('quiz-shell');
+  const pct = Math.round((score/quizQueue.length)*100);
+  let msg = "Solid grasp of the material.";
+  if(pct===100) msg = "Perfect run — you know this material cold.";
+  else if(pct>=80) msg = "Strong performance — just a couple gaps to review.";
+  else if(pct>=50) msg = "Decent start — revisit the Study Guide sections you missed.";
+  else msg = "Head back to the Study Guide and work through it section by section.";
+
+  shell.innerHTML = `
+    <div class="score-screen">
+      <div class="score-num">${score}/${quizQueue.length}</div>
+      <p>${pct}% correct — ${msg}</p>
+      <button class="btn" id="retry-btn">Retake Quiz</button>
+    </div>
+  `;
+  document.getElementById('retry-btn').addEventListener('click',startQuiz);
+}
+
+startQuiz();
+</script>
+</body>
+</html>
