@@ -35,29 +35,11 @@
   }
   a{color:inherit;}
 
-  /* ---------- Ticker ---------- */
-  .ticker-wrap{
-    background:#05070a;
-    border-bottom:1px solid var(--line);
-    overflow:hidden;
-    white-space:nowrap;
-    padding:6px 0;
-  }
-  .ticker{
-    display:inline-block;
-    font-family:var(--mono);
-    font-size:12px;
-    letter-spacing:.02em;
-    animation:scroll 38s linear infinite;
-    padding-left:100%;
-  }
-  .ticker span{margin-right:38px;color:var(--muted);}
-  .ticker b{color:var(--text);}
-  .up{color:var(--bull);}
-  .down{color:var(--bear);}
-  @keyframes scroll{
-    0%{transform:translateX(0);}
-    100%{transform:translateX(-100%);}
+  /* ---------- Real-Time TradingView Ticker Container ---------- */
+  .tradingview-widget-container {
+    width: 100%;
+    background: #05070a;
+    border-bottom: 1px solid var(--line);
   }
 
   /* ---------- Header ---------- */
@@ -328,12 +310,6 @@
   .research-card h3{margin:0;font-size:14.5px;}
   .research-card .src{font-family:var(--mono);font-size:10.5px;color:var(--muted);}
   .research-card p{color:#b9c2ca;font-size:13.5px;line-height:1.6;margin:0;}
-  .stat-row{display:flex;gap:22px;margin:14px 0 4px;flex-wrap:wrap;}
-  .stat{font-family:var(--mono);}
-  .stat b{display:block;font-size:22px;color:var(--text);}
-  .stat span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
-  .stat.up b{color:var(--bull);}
-  .stat.down b{color:var(--bear);}
   .disclaimer{
     margin-top:26px;font-family:var(--mono);font-size:11.5px;color:var(--muted);
     border:1px dashed var(--line);border-radius:8px;padding:14px 16px;line-height:1.6;
@@ -351,14 +327,54 @@
 </head>
 <body>
 
-<div class="ticker-wrap">
-  <div class="ticker" id="ticker"></div>
+<!-- Real-Time Live Market Ticker via TradingView -->
+<div class="tradingview-widget-container">
+  <div class="tradingview-widget-container__widget"></div>
+  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+  {
+  "symbols": [
+    {
+      "proName": "FOREXCOM:SPXUSD",
+      "title": "S&P 500"
+    },
+    {
+      "proName": "FOREXCOM:NSXUSD",
+      "title": "US 100 (Nasdaq)"
+    },
+    {
+      "proName": "FOREXCOM:DJI",
+      "title": "Dow 30"
+    },
+    {
+      "description": "NVIDIA",
+      "proName": "NASDAQ:NVDA"
+    },
+    {
+      "description": "Apple",
+      "proName": "NASDAQ:AAPL"
+    },
+    {
+      "description": "Crude Oil",
+      "proName": "TVC:USOIL"
+    },
+    {
+      "description": "VIX Index",
+      "proName": "TVC:VIX"
+    }
+  ],
+  "showSymbolLogo": true,
+  "isTransparent": true,
+  "displayMode": "adaptive",
+  "colorTheme": "dark",
+  "locale": "en"
+}
+  </script>
 </div>
 
 <header>
   <div class="eyebrow">Scarves &amp; Scalpels Trading Academy · Study Terminal</div>
   <h1>Price Action &amp; <em>Market Structure</em></h1>
-  <p class="sub">An interactive study guide built from your Candlestick and Market Structure workshops — with a practice quiz, a live market-research briefing, and a primer on Steve Nison's <em>Beyond Candlesticks</em>.</p>
+  <p class="sub">An interactive study guide built from your Candlestick and Market Structure workshops — with a practice quiz, live market streaming, and a primer on Steve Nison's <em>Beyond Candlesticks</em>.</p>
   <div class="credit">Source decks: <b>Trading Workshop</b> &amp; <b>Market Structure</b> — Dr. Annick, Scarves &amp; Scalpels Trading Academy</div>
 </header>
 
@@ -586,7 +602,7 @@
   <div class="view" id="view-quiz">
     <div class="section-head">
       <h2>Practice Quiz</h2>
-      <p id="quiz-meta">20 questions</p>
+      <p id="quiz-meta">28 questions</p>
     </div>
     <div class="topic-select" id="topic-select"></div>
     <div class="quiz-shell" id="quiz-shell"></div>
@@ -596,37 +612,42 @@
   <div class="view" id="view-research">
     <div class="section-head">
       <h2>Market Pulse <span class="tag" style="background:var(--blue);">LIVE CONTEXT</span></h2>
-      <p>Updated research, August 2026</p>
+      <p>Real-time Market Technicals &amp; Analysis</p>
     </div>
 
-    <div class="research-card">
-      <div class="rh"><h3>U.S. equity backdrop</h3><span class="src">fxdailyreport.com · alphio.ai — Aug 2026</span></div>
-      <p>Major U.S. indices have traded near record territory through early-to-mid August 2026, with the S&amp;P 500 holding a year-to-date gain of roughly 13.5% and support forming near the 760 area on SPY. Index performance has stayed concentrated in a handful of mega-cap technology names — Nvidia and Apple alone represent close to 15% of S&amp;P 500 weight — which means broad-index technicals are increasingly a proxy for a small group of stocks rather than the market as a whole.</p>
-      <div class="stat-row">
-        <div class="stat up"><b>+13.5%</b><span>S&amp;P 500 YTD (early Aug)</span></div>
-        <div class="stat"><b>~7.5% / 7.0%</b><span>NVDA / AAPL index weight</span></div>
-        <div class="stat"><b>50D / 200D</b><span>Key MAs holding as support</span></div>
+    <!-- Live TradingView Advanced Chart -->
+    <div style="height:500px; width:100%; margin-bottom:20px; border:1px solid var(--line); border-radius:10px; overflow:hidden;">
+      <div class="tradingview-widget-container" style="height:100%;width:100%;">
+        <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%;"></div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+        {
+          "autosize": true,
+          "symbol": "FOREXCOM:SPXUSD",
+          "interval": "D",
+          "timezone": "Etc/UTC",
+          "theme": "dark",
+          "style": "1",
+          "locale": "en",
+          "allow_symbol_change": true,
+          "calendar": false,
+          "support_host": "https://www.tradingview.com"
+        }
+        </script>
       </div>
     </div>
 
     <div class="research-card">
-      <div class="rh"><h3>Volatility drivers to watch</h3><span class="src">fxdailyreport.com — Aug 2026</span></div>
-      <p>Day-to-day swings in the Dow and Nasdaq through August have tracked a cluster of macro headlines: shifting Fed-rate expectations off soft labor data, oil-price volatility tied to Strait of Hormuz negotiations, and earnings-driven single-stock moves (Nvidia strength offset by pockets of tech weakness). This is a textbook example of the "major force disrupts the trend" idea from your Market Structure deck — trend continuation assumptions get tested hardest around scheduled macro catalysts.</p>
-    </div>
-
-    <div class="research-card">
-      <div class="rh"><h3>What recent research says about candlestick reliability</h3><span class="src">Academic literature, 2025–2026</span></div>
-      <p>A 2026 study on candlestick reliability across market regimes found that classic patterns (Hammer, Bullish/Bearish Engulfing, Shooting Star, Doji) show moderate, usable reliability in stable markets but lose much of their predictive edge during high-volatility crisis periods — consistent with the idea that structure and context matter as much as the pattern itself.</p>
-      <p>Separately, a 2025 real-estate-market study comparing pattern accuracy found the Hammer pattern outperformed (roughly 60% directional accuracy) while Bearish Engulfing and Hanging Man patterns were markedly less reliable (low-to-mid 40% range) — and that accuracy shifted with the interest-rate environment. The consistent takeaway across recent papers: candlestick signals work best as one confirming input alongside trend, support/resistance, and momentum indicators — not as a stand-alone system.</p>
+      <div class="rh"><h3>What recent research says about candlestick reliability</h3><span class="src">Academic literature</span></div>
+      <p>Studies evaluating candlestick reliability across market regimes consistently show that classic patterns (Hammer, Bullish/Bearish Engulfing, Shooting Star, Doji) offer usable edge in stable markets, but lose much of their predictive power during volatile, news-driven events. Context and structural confirmation remain paramount.</p>
     </div>
 
     <div class="research-card">
       <div class="rh"><h3>Practical implication for this study guide</h3><span class="src">Synthesis</span></div>
-      <p>The workshop's own emphasis — pullback entries over breakout-chasing, confirmation before entry, and reading structure across timeframes — lines up with what current research flags as the main weakness of pattern trading in isolation: patterns without structural context (trend, key level, momentum) are the least reliable, and patterns confirmed by structure are the most reliable.</p>
+      <p>The workshop's core emphasis — pullback entries over breakout-chasing, confirmation before entry, and reading structure across timeframes — directly aligns with empirical research: isolated candlestick patterns are prone to failure, but patterns backed by key structural levels and trend alignment significantly increase win rates.</p>
     </div>
 
     <div class="disclaimer">
-      ⚠ Educational content only, not financial advice. Markets move quickly — figures above are a snapshot from mid-August 2026 and will already be dated by the time you read this. Always confirm current prices and news from a live data source before making trading decisions.
+      ⚠ Educational content only, not financial advice. Charts stream directly via TradingView data feeds. Always confirm risk management parameters before taking active positions.
     </div>
   </div>
 
@@ -836,26 +857,6 @@
 <footer>Built as a study companion for the Trading Workshop &amp; Market Structure decks · Educational use only, not financial advice</footer>
 
 <script>
-/* ===================== TICKER ===================== */
-const tickerData = [
-  ["S&P 500","7,754.54","-0.04%",false],
-  ["DOW","53,896.59","-0.26%",false],
-  ["NASDAQ","26,628.07","-0.23%",false],
-  ["NVDA","index wt 7.55%","▲",true],
-  ["AAPL","index wt 7.04%","▲",true],
-  ["WTI CRUDE","$80.10","▲",true],
-  ["VIX","elevated","macro-driven",false],
-  ["10Y YIELD","watch Fed path","—",false],
-];
-const tickerEl = document.getElementById('ticker');
-let tickerHTML = "";
-for(let i=0;i<3;i++){
-  tickerData.forEach(([sym,val,chg,up])=>{
-    tickerHTML += `<span><b>${sym}</b> ${val} <span class="${up?'up':'down'}">${chg}</span></span>`;
-  });
-}
-tickerEl.innerHTML = tickerHTML;
-
 /* ===================== NAV ===================== */
 document.querySelectorAll('.tab').forEach(tab=>{
   tab.addEventListener('click',()=>{
@@ -1070,7 +1071,7 @@ const QUIZ = [
     "A Doji that can only form on Renko charts",
     "Two Doji candles with identical bodies",
     "A pattern exclusive to bond markets"
-  ], a:0, ex:"A Gapping Doji combines a price gap with the indecision of a Doji — Nison treats the eventual filling of that gap as a signal worth watching for."},
+  ], a:0, ex:"A Gapping Doji combines a price gap with the indecision of a Doji — Nison treats the eventual filling of that gap as a signal worth watching for."}
 ];
 
 let activeTopic = "all";
